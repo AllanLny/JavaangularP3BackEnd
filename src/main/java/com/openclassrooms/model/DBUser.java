@@ -14,8 +14,6 @@ public class DBUser {
     private String password;
     private String role;
 
-    // Getters and setters …
-
     public Integer getId() {
         return id;
     }
