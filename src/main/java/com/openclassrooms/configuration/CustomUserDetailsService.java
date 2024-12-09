@@ -1,10 +1,6 @@
 package com.openclassrooms.configuration;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -13,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.repository.DBUserRepository;
 
+import java.util.ArrayList;
+
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
@@ -20,17 +18,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        DBUser user = dbUserRepository.findByUsername(username);
+        DBUser user = dbUserRepository.findByEmail(username);
         if (user == null) {
             throw new UsernameNotFoundException("User not found with username: " + username);
         }
 
-        return new User(user.getUsername(), user.getPassword(), getGrantedAuthorities(user.getRole()));
-    }
-
-    private List<GrantedAuthority> getGrantedAuthorities(String role) {
-        List<GrantedAuthority> authorities = new ArrayList<GrantedAuthority>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
-        return authorities;
+        return new User(user.getEmail(), user.getPassword(), new ArrayList<>());
     }
 }

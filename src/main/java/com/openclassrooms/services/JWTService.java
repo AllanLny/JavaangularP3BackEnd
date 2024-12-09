@@ -1,6 +1,5 @@
 package com.openclassrooms.services;
 
-
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import org.springframework.security.core.Authentication;
@@ -11,11 +10,8 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class JWTService {
-
-
     private JwtEncoder jwtEncoder;
 
     public JWTService(JwtEncoder jwtEncoder) {
