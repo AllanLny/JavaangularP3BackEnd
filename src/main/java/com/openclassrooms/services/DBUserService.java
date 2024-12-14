@@ -19,7 +19,6 @@ import java.util.Map;
 
 @Service
 public class DBUserService {
-
     private static final Logger logger = LoggerFactory.getLogger(DBUserService.class);
 
     @Autowired
@@ -46,7 +45,7 @@ public class DBUserService {
         try {
             logger.debug("Generating token for user: {}", user.getEmail());
             Instant now = Instant.now();
-            long expiry = 36000L;
+            long expiry = 36000L; // 10 heures
 
             Map<String, Object> userClaims = new HashMap<>();
             userClaims.put("sub", user.getEmail());
