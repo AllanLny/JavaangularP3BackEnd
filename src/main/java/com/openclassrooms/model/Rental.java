@@ -11,22 +11,21 @@ import jakarta.persistence.JoinColumn;
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "MESSAGES")
-public class Message {
+@Table(name = "RENTALS")
+public class Rental {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private String name;
+    private Double surface;
+    private Double price;
+    private String picture;
+    private String description;
 
     @ManyToOne
-    @JoinColumn(name = "rental_id")
-    private Rental rental;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private DBUser user;
-
-    private String message;
+    @JoinColumn(name = "owner_id", nullable = false)
+    private DBUser owner;
 
     @Column(name = "created_at")
     private Timestamp createdAt;
@@ -43,28 +42,52 @@ public class Message {
         this.id = id;
     }
 
-    public Rental getRental() {
-        return rental;
+    public String getName() {
+        return name;
     }
 
-    public void setRental(Rental rental) {
-        this.rental = rental;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public DBUser getUser() {
-        return user;
+    public Double getSurface() {
+        return surface;
     }
 
-    public void setUser(DBUser user) {
-        this.user = user;
+    public void setSurface(Double surface) {
+        this.surface = surface;
     }
 
-    public String getMessage() {
-        return message;
+    public Double getPrice() {
+        return price;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setPrice(Double price) {
+        this.price = price;
+    }
+
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public DBUser getOwner() {
+        return owner;
+    }
+
+    public void setOwner(DBUser owner) {
+        this.owner = owner;
     }
 
     public Timestamp getCreatedAt() {

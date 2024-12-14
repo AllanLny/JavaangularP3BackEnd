@@ -1,8 +1,8 @@
 package com.openclassrooms.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
 import com.openclassrooms.model.DBUser;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface DBUserRepository extends JpaRepository<DBUser, Integer> {
-    DBUser findByUsername(String username);
+    DBUser findByEmail(String email);
 }

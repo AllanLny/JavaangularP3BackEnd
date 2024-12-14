@@ -4,16 +4,26 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import java.sql.Timestamp;
 
 @Entity
+@Table(name = "USERS")
 public class DBUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
-    private String username;
-    private String password;
-    private String role;
 
+    @Column(unique = true)
+    private String email;
+
+    private String name;
+    private String password;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+
+    // Getters and setters
     public Integer getId() {
         return id;
     }
@@ -22,12 +32,20 @@ public class DBUser {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPassword() {
@@ -38,11 +56,19 @@ public class DBUser {
         this.password = password;
     }
 
-    public String getRole() {
-        return role;
+    public Timestamp getCreatedAt() {
+        return createdAt;
     }
 
-    public void setRole(String role) {
-        this.role = role;
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }
