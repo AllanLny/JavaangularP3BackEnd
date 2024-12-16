@@ -1,13 +1,17 @@
 package com.openclassrooms.services;
 
 import com.openclassrooms.model.Message;
+import com.openclassrooms.repository.MessageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class MessageService {
-    public Message sendMessage(String messageContent) {
-        Message message = new Message();
-        message.setMessage(messageContent);
-        return message;
+
+    @Autowired
+    private MessageRepository messageRepository;
+
+    public Message sendMessage(Message message) {
+        return messageRepository.save(message);
     }
 }

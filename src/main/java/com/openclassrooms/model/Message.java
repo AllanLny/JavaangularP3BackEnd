@@ -1,13 +1,7 @@
 package com.openclassrooms.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.JoinColumn;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
@@ -18,21 +12,26 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "rental_id")
-    private Rental rental;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private DBUser user;
-
+    @Column(name = "message")
     private String message;
 
-    @Column(name = "created_at")
-    private Timestamp createdAt;
+    @Column(name = "user_id")
+    private Long userId;
 
-    @Column(name = "updated_at")
+    @Column(name = "rental_id")
+    @JsonProperty("rental_id")
+    private Long rentalId;
+
+    private Timestamp createdAt;
     private Timestamp updatedAt;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private DBUser user;
+
+    @ManyToOne
+    @JoinColumn(name = "rental_id", insertable = false, updatable = false)
+    private Rental rental;
 
     // Getters and setters
     public Long getId() {
@@ -43,28 +42,28 @@ public class Message {
         this.id = id;
     }
 
-    public Rental getRental() {
-        return rental;
-    }
-
-    public void setRental(Rental rental) {
-        this.rental = rental;
-    }
-
-    public DBUser getUser() {
-        return user;
-    }
-
-    public void setUser(DBUser user) {
-        this.user = user;
-    }
-
     public String getMessage() {
         return message;
     }
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public Long getRentalId() {
+        return rentalId;
+    }
+
+    public void setRentalId(Long rentalId) {
+        this.rentalId = rentalId;
     }
 
     public Timestamp getCreatedAt() {
@@ -81,5 +80,21 @@ public class Message {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public DBUser getUser() {
+        return user;
+    }
+
+    public void setUser(DBUser user) {
+        this.user = user;
+    }
+
+    public Rental getRental() {
+        return rental;
+    }
+
+    public void setRental(Rental rental) {
+        this.rental = rental;
     }
 }
