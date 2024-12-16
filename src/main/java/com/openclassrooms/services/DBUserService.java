@@ -78,4 +78,8 @@ public class DBUserService {
         }
         return user;
     }
+
+    public DBUser findById(Integer id) {
+        return dbUserRepository.findById(id).orElse(null);
+    }
 }
