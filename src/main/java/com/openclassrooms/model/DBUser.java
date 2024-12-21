@@ -7,6 +7,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
 import java.sql.Timestamp;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "USERS")
@@ -70,5 +72,22 @@ public class DBUser {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getFormattedCreatedAt() {
+        return formatTimestamp(createdAt);
+    }
+
+    public String getFormattedUpdatedAt() {
+        return formatTimestamp(updatedAt);
+    }
+
+    private String formatTimestamp(Timestamp timestamp) {
+        if (timestamp == null) {
+            return null;
+        }
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        LocalDateTime localDateTime = timestamp.toLocalDateTime();
+        return formatter.format(localDateTime);
     }
 }

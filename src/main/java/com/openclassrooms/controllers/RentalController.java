@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Collections;
 import java.util.stream.Collectors;
-import java.sql.Timestamp;
 
 @RestController
 @RequestMapping("/api/rentals")
@@ -136,7 +135,8 @@ public class RentalController {
                 String pictureFilename = System.currentTimeMillis() + "_" + picture.getOriginalFilename();
                 Path picturePath = IMAGE_DIR.resolve(pictureFilename);
                 Files.copy(picture.getInputStream(), picturePath);
-                rental.setPicture(pictureFilename);
+                String pictureURL = "http://localhost:3001/api/rentals/images/" + pictureFilename;
+                rental.setPicture(pictureURL);
             }
 
             rentalService.save(rental);
@@ -149,8 +149,6 @@ public class RentalController {
             return ResponseEntity.status(500).body("Error updating rental");
         }
     }
-
-
 
     @GetMapping("/images/{filename:.+}")
     @ResponseBody
@@ -198,17 +196,19 @@ public class RentalController {
             // Créer un nouvel objet Rental
             Rental rental = new Rental();
             rental.setName(name);
-            rental.setSurface((double) surface); // Convertir int en Double
-            rental.setPrice((double) price); // Convertir int en Double
+            rental.setSurface((double) surface);
+            rental.setPrice((double) price);
             rental.setDescription(description);
             rental.setOwner(owner);
-            rental.setCreatedAt(new Timestamp(new java.util.Date().getTime())); // Set createdAt
-            rental.setUpdatedAt(new Timestamp(new java.util.Date().getTime())); // Set updatedAt
+            rental.setCreatedAt(new Timestamp(new java.util.Date().getTime()));
+            rental.setUpdatedAt(new Timestamp(new java.util.Date().getTime()));
 
             // Enregistrer l'image si nécessaire
             if (!picture.isEmpty()) {
+                String baseURL = "http://localhost:3001/api/rentals/images/";
                 String pictureFilename = System.currentTimeMillis() + "_" + picture.getOriginalFilename();
                 Path picturePath = Paths.get("uploads").resolve(pictureFilename);
+                String pictureURL = baseURL + pictureFilename;
 
                 // Ensure the directory exists
                 if (!Files.exists(picturePath.getParent())) {
@@ -218,7 +218,7 @@ public class RentalController {
 
                 Files.copy(picture.getInputStream(), picturePath);
                 logger.debug("Saved picture to: {}", picturePath.toAbsolutePath());
-                rental.setPicture( pictureFilename); // Set full URL for picture
+                rental.setPicture(pictureURL); // Set full URL for picture
             }
 
             rentalService.save(rental);
