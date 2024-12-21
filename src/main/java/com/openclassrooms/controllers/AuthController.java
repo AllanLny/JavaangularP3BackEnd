@@ -13,6 +13,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -58,14 +59,21 @@ public class AuthController {
             return ResponseEntity.status(400).body(e.getMessage());
         }
     }
+    private Map<String, Object> convertUserToMap(DBUser user) {
+        Map<String, Object> userMap = new HashMap<>();
+        userMap.put("id", user.getId());
+        userMap.put("email", user.getEmail());
+        userMap.put("name", user.getName());
+        userMap.put("created_at", user.getFormattedCreatedAt());
+        userMap.put("updated_at", user.getFormattedUpdatedAt());
+        return userMap;
+    }
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@RequestHeader("Authorization") String token) {
-        // Supprimer le préfixe "Bearer " du token
         String jwtToken = token.replace("Bearer ", "");
 
         try {
-            // Décoder le token JWT pour extraire les claims
             Jwt jwt = jwtDecoder.decode(jwtToken);
             String email = jwt.getClaim("sub");
 
@@ -76,7 +84,8 @@ public class AuthController {
                 throw new UsernameNotFoundException("User not found");
             }
             logger.debug("User found with email: {}", email);
-            return ResponseEntity.ok(user);
+            Map<String, Object> userMap = convertUserToMap(user);
+            return ResponseEntity.ok(userMap);
         } catch (JwtException e) {
             logger.debug("Invalid JWT token: {}", e.getMessage());
             return ResponseEntity.status(401).body("Invalid JWT token");
