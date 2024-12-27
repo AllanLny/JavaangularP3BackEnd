@@ -2,6 +2,9 @@ package com.openclassrooms.controllers;
 
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.services.DBUserService;
+import com.openclassrooms.dto.DBUserDTO;
+import com.openclassrooms.dto.AuthResponseDTO;
+import com.openclassrooms.dto.LoginRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -15,9 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,18 +37,18 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Successfully logged in"),
             @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
-    public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-        String email = loginRequest.get("email");
-        String password = loginRequest.get("password");
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
+        String email = loginRequest.getEmail();
+        String password = loginRequest.getPassword();
 
         DBUser user = dbUserService.authenticate(email, password);
         if (user == null) {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            return ResponseEntity.status(401).body(new AuthResponseDTO(null, "Invalid credentials"));
         }
 
         String token = dbUserService.generateToken(user);
         logger.debug("Login successful for user: {}", email);
-        return ResponseEntity.ok(Map.of("token", token));
+        return ResponseEntity.ok(new AuthResponseDTO(token, "Successfully logged in"));
     }
 
     @PostMapping("/register")
@@ -57,15 +57,15 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Successfully registered"),
             @ApiResponse(responseCode = "400", description = "Invalid input")
     })
-    public ResponseEntity<?> register(@RequestBody DBUser user) {
+    public ResponseEntity<AuthResponseDTO> register(@RequestBody DBUser user) {
         try {
             logger.debug("Register attempt for user: {}", user.getEmail());
             String token = dbUserService.registerUser(user);
             logger.debug("Register successful for user: {}", user.getEmail());
-            return ResponseEntity.ok(Map.of("token", token));
+            return ResponseEntity.ok(new AuthResponseDTO(token, "Successfully registered"));
         } catch (IllegalArgumentException e) {
             logger.debug("Register failed for user: {}", user.getEmail(), e);
-            return ResponseEntity.status(400).body(e.getMessage());
+            return ResponseEntity.status(400).body(new AuthResponseDTO(null, e.getMessage()));
         }
     }
 
@@ -90,21 +90,21 @@ public class AuthController {
                 throw new UsernameNotFoundException("User not found");
             }
             logger.debug("User found with email: {}", email);
-            Map<String, Object> userMap = convertUserToMap(user);
-            return ResponseEntity.ok(userMap);
+            DBUserDTO userDTO = convertUserToDTO(user);
+            return ResponseEntity.ok(userDTO);
         } catch (JwtException e) {
             logger.debug("Invalid JWT token: {}", e.getMessage());
             return ResponseEntity.status(401).body("Invalid JWT token");
         }
     }
 
-    private Map<String, Object> convertUserToMap(DBUser user) {
-        Map<String, Object> userMap = new HashMap<>();
-        userMap.put("id", user.getId());
-        userMap.put("email", user.getEmail());
-        userMap.put("name", user.getName());
-        userMap.put("created_at", user.getFormattedCreatedAt());
-        userMap.put("updated_at", user.getFormattedUpdatedAt());
-        return userMap;
+    private DBUserDTO convertUserToDTO(DBUser user) {
+        DBUserDTO userDTO = new DBUserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setName(user.getName());
+        userDTO.setCreatedAt(user.getFormattedCreatedAt());
+        userDTO.setUpdatedAt(user.getFormattedUpdatedAt());
+        return userDTO;
     }
 }

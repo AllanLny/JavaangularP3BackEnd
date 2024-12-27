@@ -2,7 +2,6 @@ package com.openclassrooms.dto;
 
 import java.sql.Timestamp;
 import java.util.List;
-import org.springframework.web.multipart.MultipartFile;
 
 public class RentalDTO {
     private Long id;
@@ -14,7 +13,6 @@ public class RentalDTO {
     private Long owner_id;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-    private MultipartFile pictureFile; // Ajout du champ MultipartFile pour l'image
 
     // Getters
     public Long getId() {
@@ -41,7 +39,9 @@ public class RentalDTO {
         return description;
     }
 
-
+    public Long getOwner_id() {
+        return owner_id;
+    }
 
     public Timestamp getCreatedAt() {
         return createdAt;
@@ -49,10 +49,6 @@ public class RentalDTO {
 
     public Timestamp getUpdatedAt() {
         return updatedAt;
-    }
-
-    public MultipartFile getPictureFile() {
-        return pictureFile;
     }
 
     // Setters
@@ -80,10 +76,6 @@ public class RentalDTO {
         this.description = description;
     }
 
-    public Long getOwner_id() {
-        return owner_id;
-    }
-
     public void setOwner_id(Long owner_id) {
         this.owner_id = owner_id;
     }
@@ -94,9 +86,5 @@ public class RentalDTO {
 
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
-    }
-
-    public void setPictureFile(MultipartFile pictureFile) {
-        this.pictureFile = pictureFile;
     }
 }

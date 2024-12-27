@@ -2,6 +2,7 @@ package com.openclassrooms.controllers;
 
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.services.DBUserService;
+import com.openclassrooms.dto.DBUserDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -9,8 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
 
 @RestController
 @RequestMapping("/api/user")
@@ -18,6 +18,8 @@ public class UserController {
 
     @Autowired
     private DBUserService dbUserService;
+
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
     @Operation(summary = "Get a user by Id")
     @ApiResponses(value = {
@@ -31,13 +33,13 @@ public class UserController {
             return ResponseEntity.status(404).body("User not found");
         }
 
-        Map<String, Object> userMap = new HashMap<>();
-        userMap.put("id", user.getId());
-        userMap.put("email", user.getEmail());
-        userMap.put("name", user.getName());
-        userMap.put("created_at", user.getFormattedCreatedAt());
-        userMap.put("updated_at", user.getFormattedUpdatedAt());
+        DBUserDTO userDTO = new DBUserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setName(user.getName());
+        userDTO.setCreatedAt(user.getCreatedAt().toLocalDateTime().format(formatter));
+        userDTO.setUpdatedAt(user.getUpdatedAt().toLocalDateTime().format(formatter));
 
-        return ResponseEntity.ok(userMap);
+        return ResponseEntity.ok(userDTO);
     }
 }

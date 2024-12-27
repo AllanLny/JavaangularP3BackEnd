@@ -1,6 +1,7 @@
 package com.openclassrooms.controllers;
 
 import com.openclassrooms.dto.RentalDTO;
+import com.openclassrooms.dto.RentalResponse;
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.model.Rental;
 import com.openclassrooms.services.RentalService;
@@ -28,9 +29,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/rentals")
@@ -55,7 +54,7 @@ public class RentalController {
             @ApiResponse(responseCode = "400", description = "Invalid input"),
             @ApiResponse(responseCode = "401", description = "Invalid JWT token")
     })
-    public ResponseEntity<?> createRental(
+    public ResponseEntity<RentalDTO> createRental(
             @RequestHeader("Authorization") String token,
             @RequestParam("name") String name,
             @RequestParam("surface") int surface,
@@ -72,7 +71,7 @@ public class RentalController {
 
             DBUser owner = dbUserService.findByEmail(email);
             if (owner == null) {
-                return ResponseEntity.status(404).body("Owner not found");
+                return ResponseEntity.status(404).body(null);
             }
 
             Rental rental = new Rental();
@@ -100,13 +99,24 @@ public class RentalController {
             }
 
             rentalService.save(rental);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Rental created!"));
+
+            RentalDTO rentalDTO = new RentalDTO();
+            rentalDTO.setId(rental.getId());
+            rentalDTO.setName(rental.getName());
+            rentalDTO.setSurface(rental.getSurface());
+            rentalDTO.setPrice(rental.getPrice());
+            rentalDTO.setDescription(rental.getDescription());
+            rentalDTO.setPicture(Collections.singletonList(rental.getPicture()));
+            rentalDTO.setCreatedAt(rental.getCreatedAt());
+            rentalDTO.setUpdatedAt(rental.getUpdatedAt());
+
+            return ResponseEntity.ok(rentalDTO);
         } catch (JwtException e) {
             logger.debug("Invalid JWT token: {}", e.getMessage());
-            return ResponseEntity.status(401).body("Invalid JWT token");
+            return ResponseEntity.status(401).body(null);
         } catch (Exception e) {
             logger.error("Error creating rental: {}", e.getMessage());
-            return ResponseEntity.status(500).body("Error creating rental");
+            return ResponseEntity.status(500).body(null);
         }
     }
 
@@ -116,7 +126,7 @@ public class RentalController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list"),
             @ApiResponse(responseCode = "401", description = "Invalid JWT token")
     })
-    public ResponseEntity<?> getAllRentals(@RequestHeader("Authorization") String token) {
+    public ResponseEntity<RentalResponse> getAllRentals(@RequestHeader("Authorization") String token) {
         String jwtToken = token.replace("Bearer ", "");
 
         try {
@@ -138,12 +148,12 @@ public class RentalController {
                 logger.debug("Rental Pictures: {}", rental.getPicture());
             }
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("rentals", rentals);
+            RentalResponse response = new RentalResponse();
+            response.setRentals(rentals);
 
             return ResponseEntity.ok(response);
         } catch (JwtException e) {
-            return ResponseEntity.status(401).body("Invalid JWT token");
+            return ResponseEntity.status(401).body(null);
         }
     }
 
@@ -153,76 +163,74 @@ public class RentalController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved rental"),
             @ApiResponse(responseCode = "404", description = "Rental not found")
     })
-    public ResponseEntity<?> getRentalById(@PathVariable Long id) {
+    public ResponseEntity<RentalDTO> getRentalById(@PathVariable Long id) {
         RentalDTO rentalDTO = rentalService.findById(id);
         if (rentalDTO == null) {
-            return ResponseEntity.status(404).body("Rental not found");
+            return ResponseEntity.status(404).body(null);
         }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", rentalDTO.getId());
-        response.put("name", rentalDTO.getName());
-        response.put("surface", rentalDTO.getSurface());
-        response.put("price", rentalDTO.getPrice());
-        response.put("picture", rentalDTO.getPicture());
-        response.put("description", rentalDTO.getDescription());
-        response.put("owner_id", rentalDTO.getOwner_id());
-        response.put("created_at", rentalDTO.getCreatedAt().toString());
-        response.put("updated_at", rentalDTO.getUpdatedAt().toString());
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(rentalDTO);
     }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Update a rental")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Update rental")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully updated rental"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "404", description = "Rental not found"),
             @ApiResponse(responseCode = "401", description = "Invalid JWT token"),
-            @ApiResponse(responseCode = "404", description = "Rental not found")
+            @ApiResponse(responseCode = "500", description = "Error updating rental")
     })
-    public ResponseEntity<?> updateRental(
+    public ResponseEntity<RentalDTO> updateRental(
             @PathVariable Long id,
-            @RequestHeader("Authorization") String token,
-            @ModelAttribute RentalDTO rentalDTO) {
-        String jwtToken = token.replace("Bearer ", "");
-
+            @RequestParam("name") String name,
+            @RequestParam("surface") Double surface,
+            @RequestParam("price") Double price,
+            @RequestParam("description") String description,
+            @RequestParam(value = "picture", required = false) MultipartFile picture,
+            @RequestHeader("Authorization") String token) {
         try {
-            Jwt jwt = jwtDecoder.decode(jwtToken);
-            String email = jwt.getClaim("sub");
-
-            logger.debug("Update rental attempt by user with email: {}", email);
-
             Rental rental = rentalService.findEntityById(id);
             if (rental == null) {
-                return ResponseEntity.status(404).body("Rental not found");
+                return ResponseEntity.status(404).body(null);
             }
-
+    
             // Mettre à jour les champs du rental
-            rental.setName(rentalDTO.getName());
-            rental.setSurface(rentalDTO.getSurface());
-            rental.setPrice(rentalDTO.getPrice());
-            rental.setDescription(rentalDTO.getDescription());
-
+            rental.setName(name);
+            rental.setSurface(surface);
+            rental.setPrice(price);
+            rental.setDescription(description);
+    
             // Mettre à jour l'image si nécessaire
-            MultipartFile picture = rentalDTO.getPictureFile();
             if (picture != null && !picture.isEmpty()) {
                 String pictureFilename = System.currentTimeMillis() + "_" + picture.getOriginalFilename();
                 Path picturePath = IMAGE_DIR.resolve(pictureFilename);
                 Files.copy(picture.getInputStream(), picturePath);
                 String pictureURL = "http://localhost:3001/api/rentals/images/" + pictureFilename;
                 rental.setPicture(pictureURL);
+            } else {
+                rental.setPicture(rental.getPicture());
             }
-
+    
             rental.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
             rentalService.save(rental);
-            return ResponseEntity.ok(Collections.singletonMap("message", "Rental updated!"));
+    
+            RentalDTO updatedRentalDTO = new RentalDTO();
+            updatedRentalDTO.setId(rental.getId());
+            updatedRentalDTO.setName(rental.getName());
+            updatedRentalDTO.setSurface(rental.getSurface());
+            updatedRentalDTO.setPrice(rental.getPrice());
+            updatedRentalDTO.setDescription(rental.getDescription());
+            updatedRentalDTO.setPicture(Collections.singletonList(rental.getPicture()));
+            updatedRentalDTO.setCreatedAt(rental.getCreatedAt());
+            updatedRentalDTO.setUpdatedAt(rental.getUpdatedAt());
+    
+            return ResponseEntity.ok(updatedRentalDTO);
         } catch (JwtException e) {
             logger.debug("Invalid JWT token: {}", e.getMessage());
-            return ResponseEntity.status(401).body("Invalid JWT token");
+            return ResponseEntity.status(401).body(null);
         } catch (Exception e) {
             logger.error("Error updating rental: {}", e.getMessage());
-            return ResponseEntity.status(500).body("Error updating rental");
+            return ResponseEntity.status(500).body(null);
         }
     }
 
@@ -230,24 +238,17 @@ public class RentalController {
     @Operation(summary = "Serve rental image")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully served image"),
-            @ApiResponse(responseCode = "404", description = "Image not found"),
-            @ApiResponse(responseCode = "500", description = "Error serving image")
+            @ApiResponse(responseCode = "404", description = "Image not found")
     })
-    @ResponseBody
-    public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
-        try {
-            Path file = IMAGE_DIR.resolve(filename);
-            Resource resource = new UrlResource(file.toUri());
-
-            if (resource.exists() || resource.isReadable()) {
-                return ResponseEntity.ok()
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-            } else {
-                return ResponseEntity.status(404).body(null);
-            }
-        } catch (MalformedURLException e) {
-            return ResponseEntity.status(500).body(null);
+    public ResponseEntity<Resource> serveImage(@PathVariable String filename) throws MalformedURLException {
+        Path file = IMAGE_DIR.resolve(filename);
+        Resource resource = new UrlResource(file.toUri());
+        if (resource.exists() || resource.isReadable()) {
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+        } else {
+            return ResponseEntity.status(404).body(null);
         }
     }
 }
