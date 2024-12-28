@@ -1,10 +1,19 @@
 package com.openclassrooms.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class DBUserDTO {
     private Integer id;
     private String email;
     private String name;
+
+    @JsonProperty("created_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
     private String createdAt;
+
+    @JsonProperty("updated_at")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd")
     private String updatedAt;
 
     // Getters and setters

@@ -1,5 +1,7 @@
 package com.openclassrooms.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -11,7 +13,11 @@ public class RentalDTO {
     private List<String> picture;
     private String description;
     private Long owner_id;
+
+    @JsonProperty("created_at")
     private Timestamp createdAt;
+
+    @JsonProperty("updated_at")
     private Timestamp updatedAt;
 
     // Getters

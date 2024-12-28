@@ -1,8 +1,8 @@
 package com.openclassrooms.controllers;
 
+import com.openclassrooms.dto.DBUserDTO;
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.services.DBUserService;
-import com.openclassrooms.dto.DBUserDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.format.DateTimeFormatter;
 
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 public class UserController {
 
     @Autowired

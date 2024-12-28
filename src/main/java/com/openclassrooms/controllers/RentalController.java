@@ -54,7 +54,7 @@ public class RentalController {
             @ApiResponse(responseCode = "400", description = "Invalid input"),
             @ApiResponse(responseCode = "401", description = "Invalid JWT token")
     })
-    public ResponseEntity<RentalDTO> createRental(
+    public ResponseEntity<RentalResponse> createRental(
             @RequestHeader("Authorization") String token,
             @RequestParam("name") String name,
             @RequestParam("surface") int surface,
@@ -110,7 +110,11 @@ public class RentalController {
             rentalDTO.setCreatedAt(rental.getCreatedAt());
             rentalDTO.setUpdatedAt(rental.getUpdatedAt());
 
-            return ResponseEntity.ok(rentalDTO);
+            RentalResponse response = new RentalResponse();
+            response.setMessage("Rental created successfully");
+            response.setRental(rentalDTO);
+
+            return ResponseEntity.ok(response);
         } catch (JwtException e) {
             logger.debug("Invalid JWT token: {}", e.getMessage());
             return ResponseEntity.status(401).body(null);
@@ -186,7 +190,6 @@ public class RentalController {
             @RequestParam("surface") Double surface,
             @RequestParam("price") Double price,
             @RequestParam("description") String description,
-            @RequestParam(value = "picture", required = false) MultipartFile picture,
             @RequestHeader("Authorization") String token) {
         try {
             Rental rental = rentalService.findEntityById(id);
@@ -199,17 +202,6 @@ public class RentalController {
             rental.setSurface(surface);
             rental.setPrice(price);
             rental.setDescription(description);
-    
-            // Mettre à jour l'image si nécessaire
-            if (picture != null && !picture.isEmpty()) {
-                String pictureFilename = System.currentTimeMillis() + "_" + picture.getOriginalFilename();
-                Path picturePath = IMAGE_DIR.resolve(pictureFilename);
-                Files.copy(picture.getInputStream(), picturePath);
-                String pictureURL = "http://localhost:3001/api/rentals/images/" + pictureFilename;
-                rental.setPicture(pictureURL);
-            } else {
-                rental.setPicture(rental.getPicture());
-            }
     
             rental.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
             rentalService.save(rental);
