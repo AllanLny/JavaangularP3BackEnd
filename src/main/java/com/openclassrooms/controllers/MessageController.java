@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/messages")
@@ -42,58 +41,56 @@ public class MessageController {
     private JwtDecoder jwtDecoder;
 
     @PostMapping
-    @Operation(summary = "Send a message")
+    @Operation(summary = "Create a new message")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Message sent with success"),
-            @ApiResponse(responseCode = "400", description = "Invalid input"),
-            @ApiResponse(responseCode = "404", description = "Rental not found"),
-            @ApiResponse(responseCode = "401", description = "Invalid JWT token")
+            @ApiResponse(responseCode = "200", description = "Successfully created message"),
+            @ApiResponse(responseCode = "401", description = "Invalid JWT token"),
+            @ApiResponse(responseCode = "404", description = "User or rental not found")
     })
-    public ResponseEntity<?> sendMessage(@RequestHeader("Authorization") String token, @RequestBody MessageDTO messageDTO) {
+    public ResponseEntity<MessageDTO> createMessage(@RequestHeader("Authorization") String token, @RequestBody MessageDTO messageDTO) {
         String jwtToken = token.replace("Bearer ", "");
 
         try {
             Jwt jwt = jwtDecoder.decode(jwtToken);
             String email = jwt.getClaim("sub");
 
-            logger.debug("Send message attempt by user with email: {}", email);
             DBUser user = dbUserService.findByEmail(email);
             if (user == null) {
-                logger.debug("User not found with email: {}", email);
-                return ResponseEntity.status(404).body("User not found");
+                return ResponseEntity.status(404).body(null);
             }
 
-            Long rentalId = messageDTO.getRental_id();
-            if (rentalId == null) {
-                logger.debug("Rental ID is null in messageDTO");
-                return ResponseEntity.status(400).body("Rental ID must not be null");
-            }
-            logger.debug("Rental ID from messageDTO: {}", rentalId);
-
-            Rental rental = rentalService.findEntityById(rentalId);
+            Rental rental = rentalService.findEntityById(messageDTO.getRental_id());
             if (rental == null) {
-                logger.debug("Rental not found for ID: {}", rentalId);
-                return ResponseEntity.status(404).body("Rental not found");
+                return ResponseEntity.status(404).body(null);
             }
-
-            logger.debug("Found rental: {}", rental);
 
             Message message = new Message();
-            message.setUser(user);
-            message.setRental(rental);
             message.setMessage(messageDTO.getMessage());
+            message.setUser(user);
+            message.setUserId(user.getId().longValue()); // Set userId
+            message.setRental(rental);
+            message.setRentalId(rental.getId().longValue()); // Set rentalId
             message.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             message.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
-            message.setUserId(messageDTO.getUser_id()); // Ensure user_id is set
-            message.setRentalId(messageDTO.getRental_id()); // Ensure rental_id is set
 
-            messageService.sendMessage(message);
-            logger.debug("Message sent successfully");
+            Message savedMessage = messageService.saveMessage(message);
 
-            return ResponseEntity.ok(Map.of("message", "Message sent with success"));
+            MessageDTO responseDTO = convertMessageToDTO(savedMessage);
+            responseDTO.setMessage("Message sent successfully");
+            return ResponseEntity.ok(responseDTO);
         } catch (JwtException e) {
-            logger.debug("Invalid JWT token: {}", e.getMessage());
-            return ResponseEntity.status(401).body("Invalid JWT token");
+            return ResponseEntity.status(401).body(null);
         }
+    }
+
+    private MessageDTO convertMessageToDTO(Message message) {
+        MessageDTO messageDTO = new MessageDTO();
+        messageDTO.setId(message.getId());
+        messageDTO.setMessage(message.getMessage());
+        messageDTO.setUser_id(message.getUserId());
+        messageDTO.setRental_id(message.getRentalId());
+        messageDTO.setCreatedAt(message.getCreatedAt());
+        messageDTO.setUpdatedAt(message.getUpdatedAt());
+        return messageDTO;
     }
 }

@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.sql.Timestamp;
 
 @Service
 public class DBUserService {
@@ -74,6 +75,10 @@ public class DBUserService {
 
     public String registerUser(DBUser user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+        user.setCreatedAt(currentTimestamp);
+        user.setUpdatedAt(currentTimestamp);
+
         dbUserRepository.save(user);
         return generateToken(user);
     }
