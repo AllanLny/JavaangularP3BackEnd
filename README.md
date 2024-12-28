@@ -26,6 +26,9 @@ git clone https://github.com/AllanLny/JavaangularP3BackEnd
 
 3. Configurez la base de données MySQL :
 
+Lien vers le scipt de création de la base de données : 
+p3/script/script.sql
+
 ```sh
 Créez une base de données MySQL et mettez à jour les informations de connexion dans le fichier application.properties :
 spring.datasource.url=jdbc:mysql://localhost:3306/votre_base_de_donnees
