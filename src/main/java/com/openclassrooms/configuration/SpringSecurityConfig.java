@@ -1,6 +1,7 @@
 package com.openclassrooms.configuration;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -22,7 +23,8 @@ import java.util.Base64;
 @Configuration
 public class SpringSecurityConfig {
 
-    private final String jwtKey = "rftyp/eQCX1Zuw/nVDK6BPPGfCNQcMR8gr1NjudKjE8=";
+    @Value("${jwt.secret}")
+    private String jwtKey;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
