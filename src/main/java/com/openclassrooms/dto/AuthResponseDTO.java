@@ -2,15 +2,14 @@ package com.openclassrooms.dto;
 
 public class AuthResponseDTO {
     private String token;
-    private String message;
+    private DBUserDTO user;
 
-    public AuthResponseDTO() {}
-
-    public AuthResponseDTO(String token, String message) {
+    public AuthResponseDTO(String token, DBUserDTO user) {
         this.token = token;
-        this.message = message;
+        this.user = user;
     }
 
+    // Getters and setters
     public String getToken() {
         return token;
     }
@@ -19,11 +18,11 @@ public class AuthResponseDTO {
         this.token = token;
     }
 
-    public String getMessage() {
-        return message;
+    public DBUserDTO getUser() {
+        return user;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public void setUser(DBUserDTO user) {
+        this.user = user;
     }
 }

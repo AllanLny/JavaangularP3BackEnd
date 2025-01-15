@@ -15,23 +15,17 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.http.MediaType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.net.MalformedURLException;
 import java.nio.file.Path;
-import java.sql.Timestamp;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/rentals")
 public class RentalController {
-
-    private static final Logger logger = LoggerFactory.getLogger(RentalController.class);
 
     @Autowired
     private RentalService rentalService;
@@ -55,31 +49,20 @@ public class RentalController {
             @RequestParam("surface") int surface,
             @RequestParam("price") int price,
             @RequestParam("description") String description,
-            @RequestParam("picture") MultipartFile picture) {
+            @RequestParam("picture") MultipartFile picture) throws Exception {
         String jwtToken = token.replace("Bearer ", "");
+        Jwt jwt = jwtDecoder.decode(jwtToken);
+        String email = jwt.getClaim("sub");
 
-        try {
-            Jwt jwt = jwtDecoder.decode(jwtToken);
-            String email = jwt.getClaim("sub");
+        DBUser owner = dbUserService.findByEmail(email);
 
-            logger.debug("Create rental attempt by user with email: {}", email);
+        RentalDTO rentalDTO = rentalService.saveRental(name, surface, price, description, picture, owner);
 
-            DBUser owner = dbUserService.findByEmail(email);
-            if (owner == null) {
-                return ResponseEntity.status(404).body(null);
-            }
+        RentalResponse response = new RentalResponse();
+        response.setMessage("Rental created successfully");
+        response.setRental(rentalDTO);
 
-            rentalService.saveRental(name, surface, price, description, picture, owner);
-
-            RentalResponse response = new RentalResponse();
-            response.setMessage("Rental created !");
-
-            return ResponseEntity.ok(response);
-        } catch (JwtException e) {
-            return ResponseEntity.status(401).body(null);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(null);
-        }
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
@@ -88,11 +71,11 @@ public class RentalController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list"),
             @ApiResponse(responseCode = "401", description = "Invalid JWT token")
     })
-    public ResponseEntity<RentalResponse> getAllRentals(){
-            List<RentalDTO> rentals = rentalService.findAll();
-            RentalResponse response = new RentalResponse();
-            response.setRentals(rentals);
-            return ResponseEntity.ok(response);
+    public ResponseEntity<RentalResponse> getAllRentals() {
+        List<RentalDTO> rentals = rentalService.findAll();
+        RentalResponse response = new RentalResponse();
+        response.setRentals(rentals);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
@@ -103,10 +86,6 @@ public class RentalController {
     })
     public ResponseEntity<RentalDTO> getRentalById(@PathVariable Long id) {
         RentalDTO rentalDTO = rentalService.findById(id);
-        if (rentalDTO == null) {
-            return ResponseEntity.status(404).body(null);
-        }
-
         return ResponseEntity.ok(rentalDTO);
     }
 
@@ -124,21 +103,9 @@ public class RentalController {
             @RequestParam("surface") Double surface,
             @RequestParam("price") Double price,
             @RequestParam("description") String description,
-            @RequestHeader("Authorization") String token) {
-        try {
-            RentalDTO updatedRentalDTO = rentalService.updateRental(id, name, surface, price, description);
-            if (updatedRentalDTO == null) {
-                return ResponseEntity.status(404).body(null);
-            }
-
-            return ResponseEntity.ok(updatedRentalDTO);
-        } catch (JwtException e) {
-            logger.debug("Invalid JWT token: {}", e.getMessage());
-            return ResponseEntity.status(401).body(null);
-        } catch (Exception e) {
-            logger.error("Error updating rental: {}", e.getMessage());
-            return ResponseEntity.status(500).body(null);
-        }
+            @RequestHeader("Authorization") String token) throws Exception {
+        RentalDTO updatedRentalDTO = rentalService.updateRental(id, name, surface, price, description);
+        return ResponseEntity.ok(updatedRentalDTO);
     }
 
     @GetMapping("/images/{filename:.+}")
@@ -150,12 +117,8 @@ public class RentalController {
     public ResponseEntity<Resource> serveImage(@PathVariable String filename) throws MalformedURLException {
         Path file = RentalService.IMAGE_DIR.resolve(filename);
         Resource resource = new UrlResource(file.toUri());
-        if (resource.exists() || resource.isReadable()) {
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                    .body(resource);
-        } else {
-            return ResponseEntity.status(404).body(null);
-        }
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
     }
 }

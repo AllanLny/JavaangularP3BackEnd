@@ -39,10 +39,10 @@ public class MessageService {
         message.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
 
         messageRepository.save(message);
-        return convertToDTO(message, "Message envoyé avec succès");
+        return convertToDTO(message);
     }
 
-    private MessageDTO convertToDTO(Message message, String successMessage) {
+    private MessageDTO convertToDTO(Message message) {
         MessageDTO dto = new MessageDTO();
         dto.setId(message.getId());
         dto.setMessage(message.getMessage());

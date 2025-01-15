@@ -9,6 +9,7 @@ public class MessageDTO {
     private Long rental_id;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+
     // Getters and Setters
     public Long getId() {
         return id;
@@ -57,5 +58,4 @@ public class MessageDTO {
     public void setUpdatedAt(Timestamp updatedAt) {
         this.updatedAt = updatedAt;
     }
-
 }

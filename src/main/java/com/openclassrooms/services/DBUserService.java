@@ -1,6 +1,7 @@
 package com.openclassrooms.services;
 
 import com.openclassrooms.dto.AuthResponseDTO;
+import com.openclassrooms.dto.DBUserDTO;
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.repository.DBUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +12,6 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -21,8 +20,6 @@ import java.util.Map;
 
 @Service
 public class DBUserService {
-
-    private static final Logger logger = LoggerFactory.getLogger(DBUserService.class);
 
     private final DBUserRepository dbUserRepository;
     private final PasswordEncoder passwordEncoder;
@@ -73,14 +70,17 @@ public class DBUserService {
         return dbUserRepository.findByEmail(email);
     }
 
-    public String registerUser(DBUser user) {
+    public Map<String, String> registerUser(DBUser user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
         user.setCreatedAt(currentTimestamp);
         user.setUpdatedAt(currentTimestamp);
 
         dbUserRepository.save(user);
-        return generateToken(user);
+        String token = generateToken(user);
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
+        return response;
     }
 
     public AuthResponseDTO login(String email, String password) {
@@ -89,7 +89,24 @@ public class DBUserService {
             return null;
         }
         String token = generateToken(user);
-        logger.debug("Login successful for user: {}", email);
-        return new AuthResponseDTO(token, "Successfully logged in");
+        return new AuthResponseDTO(token, convertToDTO(user));
+    }
+
+    public DBUserDTO getUserDTOById(Integer id) {
+        DBUser user = findById(id);
+        if (user == null) {
+            return null;
+        }
+        return convertToDTO(user);
+    }
+
+    public DBUserDTO convertToDTO(DBUser user) {
+        DBUserDTO userDTO = new DBUserDTO();
+        userDTO.setId(user.getId());
+        userDTO.setEmail(user.getEmail());
+        userDTO.setName(user.getName());
+        userDTO.setCreatedAt(user.getCreatedAt().toString());
+        userDTO.setUpdatedAt(user.getUpdatedAt().toString());
+        return userDTO;
     }
 }
