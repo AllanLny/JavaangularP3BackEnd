@@ -2,8 +2,7 @@ package com.openclassrooms.controllers;
 
 import com.openclassrooms.dto.CreateMessageDTO;
 import com.openclassrooms.dto.MessageDTO;
-import com.openclassrooms.dto.MessageResponse;
-import com.openclassrooms.model.DBUser;
+import com.openclassrooms.dto.MessageResponseDTO;
 import com.openclassrooms.services.DBUserService;
 import com.openclassrooms.services.MessageService;
 import com.openclassrooms.services.RentalService;
@@ -16,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -42,7 +40,7 @@ public class MessageController {
                          content = @Content(schema = @Schema(implementation = MessageDTO.class))),
             @ApiResponse(responseCode = "404", description = "User or rental not found")
     })
-    public ResponseEntity<MessageResponse> createMessage(@RequestHeader("Authorization") String token, @RequestBody CreateMessageDTO createMessageDTO) {
+    public ResponseEntity<MessageResponseDTO> createMessage(@RequestHeader("Authorization") String token, @RequestBody CreateMessageDTO createMessageDTO) {
         String jwtToken = token.replace("Bearer ", "");
         Jwt jwt = jwtDecoder.decode(jwtToken);
         String email = jwt.getClaim("sub");
@@ -50,7 +48,7 @@ public class MessageController {
         dbUserService.findByEmail(email);
         messageService.saveMessage(createMessageDTO);
 
-        MessageResponse response = new MessageResponse("Message send with success");
+        MessageResponseDTO response = new MessageResponseDTO("Message send with success");
         return ResponseEntity.ok(response);
     }
 }

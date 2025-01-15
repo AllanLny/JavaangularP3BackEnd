@@ -34,8 +34,11 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Successfully logged in"),
             @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
-        AuthResponseDTO response = dbUserService.login(loginRequest.getEmail(), loginRequest.getPassword());
+    public ResponseEntity<TokenResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
+        TokenResponseDTO response = dbUserService.login(loginRequest.getEmail(), loginRequest.getPassword());
+        if (response == null) {
+            return ResponseEntity.status(401).body(null);
+        }
         return ResponseEntity.ok(response);
     }
 

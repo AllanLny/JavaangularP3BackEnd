@@ -82,13 +82,13 @@ public class DBUserService {
         return new TokenResponseDTO(token);
     }
 
-    public AuthResponseDTO login(String email, String password) {
+    public TokenResponseDTO login(String email, String password) {
         DBUser user = authenticate(email, password);
         if (user == null) {
             return null;
         }
         String token = generateToken(user);
-        return new AuthResponseDTO(token, convertToDTO(user));
+        return new TokenResponseDTO(token);
     }
 
     public DBUserDTO getUserDTOById(Integer id) {
