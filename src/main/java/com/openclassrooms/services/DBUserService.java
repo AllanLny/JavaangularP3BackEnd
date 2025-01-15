@@ -2,6 +2,7 @@ package com.openclassrooms.services;
 
 import com.openclassrooms.dto.AuthResponseDTO;
 import com.openclassrooms.dto.DBUserDTO;
+import com.openclassrooms.dto.TokenResponseDTO;
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.repository.DBUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +71,7 @@ public class DBUserService {
         return dbUserRepository.findByEmail(email);
     }
 
-    public Map<String, String> registerUser(DBUser user) {
+    public TokenResponseDTO registerUser(DBUser user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
         user.setCreatedAt(currentTimestamp);
@@ -78,9 +79,7 @@ public class DBUserService {
 
         dbUserRepository.save(user);
         String token = generateToken(user);
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-        return response;
+        return new TokenResponseDTO(token);
     }
 
     public AuthResponseDTO login(String email, String password) {

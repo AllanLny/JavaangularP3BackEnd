@@ -4,6 +4,7 @@ import com.openclassrooms.dto.AuthResponseDTO;
 import com.openclassrooms.dto.DBUserDTO;
 import com.openclassrooms.dto.LoginRequestDTO;
 import com.openclassrooms.dto.RegisterUserDTO;
+import com.openclassrooms.dto.TokenResponseDTO;
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.services.DBUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,8 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -52,15 +51,15 @@ public class AuthController {
             ))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully registered",
-                    content = @Content(schema = @Schema(implementation = AuthResponseDTO.class)))
+                    content = @Content(schema = @Schema(implementation = TokenResponseDTO.class)))
     })
-    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterUserDTO registerUser) {
+    public ResponseEntity<TokenResponseDTO> register(@RequestBody RegisterUserDTO registerUser) {
         DBUser user = new DBUser();
         user.setEmail(registerUser.getEmail());
         user.setName(registerUser.getName());
         user.setPassword(registerUser.getPassword());
 
-        Map<String, String> tokenResponse = dbUserService.registerUser(user);
+        TokenResponseDTO tokenResponse = dbUserService.registerUser(user);
         return ResponseEntity.ok(tokenResponse);
     }
 
