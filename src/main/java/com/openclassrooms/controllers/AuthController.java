@@ -36,9 +36,6 @@ public class AuthController {
     })
     public ResponseEntity<AuthResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
         AuthResponseDTO response = dbUserService.login(loginRequest.getEmail(), loginRequest.getPassword());
-        if (response == null) {
-            return ResponseEntity.status(401).body(null);
-        }
         return ResponseEntity.ok(response);
     }
 
