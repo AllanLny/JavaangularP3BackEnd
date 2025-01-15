@@ -1,5 +1,6 @@
 package com.openclassrooms.controllers;
 
+import com.openclassrooms.dto.MessageResponseDTO;
 import com.openclassrooms.dto.RentalDTO;
 import com.openclassrooms.dto.RentalResponse;
 import com.openclassrooms.model.DBUser;
@@ -43,7 +44,7 @@ public class RentalController {
             @ApiResponse(responseCode = "400", description = "Invalid input"),
             @ApiResponse(responseCode = "401", description = "Invalid JWT token")
     })
-    public ResponseEntity<RentalResponse> createRental(
+    public ResponseEntity<MessageResponseDTO> createRental(
             @RequestHeader("Authorization") String token,
             @RequestParam("name") String name,
             @RequestParam("surface") int surface,
@@ -56,15 +57,10 @@ public class RentalController {
 
         DBUser owner = dbUserService.findByEmail(email);
 
-        RentalDTO rentalDTO = rentalService.saveRental(name, surface, price, description, picture, owner);
+        rentalService.saveRental(name, surface, price, description, picture, owner);
 
-        RentalResponse response = new RentalResponse();
-        response.setMessage("Rental created successfully");
-        response.setRental(rentalDTO);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new MessageResponseDTO("Rental created successfully"));
     }
-
     @GetMapping
     @Operation(summary = "View a list of available rentals")
     @ApiResponses(value = {
@@ -73,9 +69,7 @@ public class RentalController {
     })
     public ResponseEntity<RentalResponse> getAllRentals() {
         List<RentalDTO> rentals = rentalService.findAll();
-        RentalResponse response = new RentalResponse();
-        response.setRentals(rentals);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(new RentalResponse(rentals));
     }
 
     @GetMapping("/{id}")

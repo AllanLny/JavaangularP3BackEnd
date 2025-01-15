@@ -1,9 +1,9 @@
 package com.openclassrooms.dto;
 
-public class MessageResponse {
+public class MessageResponseDTO {
     private String message;
 
-    public MessageResponse(String message) {
+    public MessageResponseDTO(String message) {
         this.message = message;
     }
 
