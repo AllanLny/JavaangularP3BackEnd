@@ -28,61 +28,63 @@ public class RentalService {
     private DBUserService dbUserService;
 
     public RentalDTO saveRental(String name, int surface, int price, String description, MultipartFile picture, DBUser owner) throws Exception {
-        Rental rental = new Rental();
-        rental.setName(name);
-        rental.setSurface((double) surface);
-        rental.setPrice((double) price);
-        rental.setDescription(description);
-        rental.setOwner(owner);
-        rental.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-        rental.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
+        try {
+            Rental rental = new Rental();
+            rental.setName(name);
+            rental.setSurface((double) surface);
+            rental.setPrice((double) price);
+            rental.setDescription(description);
+            rental.setOwner(owner);
+            rental.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+            rental.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
 
-        if (!picture.isEmpty()) {
-            String pictureFilename = System.currentTimeMillis() + "_" + picture.getOriginalFilename();
-            Path picturePath = IMAGE_DIR.resolve(pictureFilename);
+            if (!picture.isEmpty()) {
+                String pictureFilename = System.currentTimeMillis() + "_" + picture.getOriginalFilename();
+                Path picturePath = IMAGE_DIR.resolve(pictureFilename);
 
-            if (!Files.exists(picturePath.getParent())) {
-                Files.createDirectories(picturePath.getParent());
+                if (!Files.exists(picturePath.getParent())) {
+                    Files.createDirectories(picturePath.getParent());
+                }
+
+                Files.copy(picture.getInputStream(), picturePath);
+                String pictureUrl = picturePath.toUri().toString();
+                rental.setPicture(pictureUrl);
             }
 
-            Files.copy(picture.getInputStream(), picturePath);
-            String pictureUrl = "http://localhost:3001/api/rentals/images/" + pictureFilename;
-            rental.setPicture(pictureUrl);
+            rentalRepository.save(rental);
+            return convertToDTO(rental);
+        } catch (Exception e) {
+            throw new Exception("Error saving rental: " + e.getMessage());
         }
-
-        rentalRepository.save(rental);
-        return convertToDTO(rental);
     }
 
     public List<RentalDTO> findAll() {
-        return rentalRepository.findAll().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+        try {
+            return rentalRepository.findAll().stream()
+                    .map(this::convertToDTO)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RuntimeException("Error retrieving rentals: " + e.getMessage());
+        }
     }
 
     public RentalDTO findById(Long id) {
         return rentalRepository.findById(id)
                 .map(this::convertToDTO)
-                .orElse(null);
-    }
-
-    public Rental findEntityById(Long id) {
-        return rentalRepository.findById(id).orElse(null);
+                .orElseThrow(() -> new IllegalArgumentException("Rental not found"));
     }
 
     public RentalDTO updateRental(Long id, String name, Double surface, Double price, String description) {
-        Rental rental = findEntityById(id);
-        if (rental == null) {
-            return null;
-        }
+        Rental rental = rentalRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Rental not found"));
 
         rental.setName(name);
         rental.setSurface(surface);
         rental.setPrice(price);
         rental.setDescription(description);
         rental.setUpdatedAt(new Timestamp(System.currentTimeMillis()));
-        rentalRepository.save(rental);
 
+        rentalRepository.save(rental);
         return convertToDTO(rental);
     }
 

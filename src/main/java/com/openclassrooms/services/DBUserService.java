@@ -7,6 +7,7 @@ import com.openclassrooms.model.DBUser;
 import com.openclassrooms.repository.DBUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -18,6 +19,7 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class DBUserService {
@@ -41,7 +43,7 @@ public class DBUserService {
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             return user;
         }
-        return null;
+        throw new AccessDeniedException("Invalid email or password");
     }
 
     public String generateToken(DBUser user) {
@@ -64,41 +66,47 @@ public class DBUserService {
     }
 
     public DBUser findById(Integer id) {
-        return dbUserRepository.findById(id).orElse(null);
+        Optional<DBUser> user = dbUserRepository.findById(id);
+        if (user.isEmpty()) {
+            throw new IllegalArgumentException("User not found");
+        }
+        return user.get();
     }
 
     public DBUser findByEmail(String email) {
-        return dbUserRepository.findByEmail(email);
+        DBUser user = dbUserRepository.findByEmail(email);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        return user;
     }
 
     public TokenResponseDTO registerUser(DBUser user) {
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
-        user.setCreatedAt(currentTimestamp);
-        user.setUpdatedAt(currentTimestamp);
+        try {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
+            user.setCreatedAt(currentTimestamp);
+            user.setUpdatedAt(currentTimestamp);
 
-        dbUserRepository.save(user);
-        String token = generateToken(user);
-        return new TokenResponseDTO(token);
+            dbUserRepository.save(user);
+            String token = generateToken(user);
+            return new TokenResponseDTO(token);
+        } catch (Exception e) {
+            throw new RuntimeException("Error registering user: " + e.getMessage());
+        }
     }
 
     public TokenResponseDTO login(String email, String password) {
         DBUser user = authenticate(email, password);
-        if (user == null) {
-            return null;
-        }
         String token = generateToken(user);
         return new TokenResponseDTO(token);
     }
 
     public DBUserDTO getUserDTOById(Integer id) {
         DBUser user = findById(id);
-        if (user == null) {
-            return null;
-        }
         return convertToDTO(user);
     }
-
+    
     public DBUserDTO convertToDTO(DBUser user) {
         DBUserDTO userDTO = new DBUserDTO();
         userDTO.setId(user.getId());
