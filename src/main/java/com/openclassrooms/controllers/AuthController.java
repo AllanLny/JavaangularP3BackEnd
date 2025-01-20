@@ -7,6 +7,7 @@ import com.openclassrooms.dto.RegisterUserDTO;
 import com.openclassrooms.dto.TokenResponseDTO;
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.services.DBUserService;
+import com.openclassrooms.services.JWTService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -16,7 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -26,7 +31,7 @@ public class AuthController {
     private DBUserService dbUserService;
 
     @Autowired
-    private JwtDecoder jwtDecoder;
+    private JWTService jwtService;
 
     @PostMapping("/login")
     @Operation(summary = "Login a user")
@@ -53,13 +58,8 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Successfully registered",
                     content = @Content(schema = @Schema(implementation = TokenResponseDTO.class)))
     })
-    public ResponseEntity<TokenResponseDTO> register(@RequestBody RegisterUserDTO registerUser) {
-        DBUser user = new DBUser();
-        user.setEmail(registerUser.getEmail());
-        user.setName(registerUser.getName());
-        user.setPassword(registerUser.getPassword());
-
-        TokenResponseDTO tokenResponse = dbUserService.registerUser(user);
+    public ResponseEntity<TokenResponseDTO> register(@Validated @RequestBody RegisterUserDTO registerUser) {
+        TokenResponseDTO tokenResponse = dbUserService.registerUser(registerUser);
         return ResponseEntity.ok(tokenResponse);
     }
 
@@ -70,9 +70,8 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = DBUserDTO.class))),
     })
     public ResponseEntity<DBUserDTO> getCurrentUser(@RequestHeader("Authorization") String token) {
-        String jwtToken = token.replace("Bearer ", "");
-        Jwt jwt = jwtDecoder.decode(jwtToken);
-        String email = jwt.getClaim("sub");
+        Map<String, Object> claims = jwtService.decodeToken(token);
+        String email = (String) claims.get("sub");
         DBUser user = dbUserService.findByEmail(email);
         DBUserDTO userDTO = dbUserService.convertToDTO(user);
         return ResponseEntity.ok(userDTO);

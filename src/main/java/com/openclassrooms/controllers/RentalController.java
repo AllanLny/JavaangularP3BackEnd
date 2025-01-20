@@ -4,9 +4,13 @@ import com.openclassrooms.dto.MessageResponseDTO;
 import com.openclassrooms.dto.RentalDTO;
 import com.openclassrooms.dto.RentalResponse;
 import com.openclassrooms.model.DBUser;
+import com.openclassrooms.services.JWTService;
 import com.openclassrooms.services.RentalService;
 import com.openclassrooms.services.DBUserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +27,7 @@ import org.springframework.http.MediaType;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/rentals")
@@ -35,7 +40,7 @@ public class RentalController {
     private DBUserService dbUserService;
 
     @Autowired
-    private JwtDecoder jwtDecoder;
+    private JWTService jwtService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create a new rental")
@@ -51,9 +56,8 @@ public class RentalController {
             @RequestParam("price") int price,
             @RequestParam("description") String description,
             @RequestParam("picture") MultipartFile picture) throws Exception {
-        String jwtToken = token.replace("Bearer ", "");
-        Jwt jwt = jwtDecoder.decode(jwtToken);
-        String email = jwt.getClaim("sub");
+        Map<String, Object> claims = jwtService.decodeToken(token);
+        String email = (String) claims.get("sub");
 
         DBUser owner = dbUserService.findByEmail(email);
 
@@ -83,10 +87,11 @@ public class RentalController {
         return ResponseEntity.ok(rentalDTO);
     }
 
+
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Update rental")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully updated rental"),
+            @ApiResponse(responseCode = "200", description = "Successfully updated rental", content = @Content(schema = @Schema(implementation = RentalDTO.class))),
             @ApiResponse(responseCode = "404", description = "Rental not found"),
             @ApiResponse(responseCode = "401", description = "Invalid JWT token"),
             @ApiResponse(responseCode = "500", description = "Error updating rental")
@@ -97,11 +102,11 @@ public class RentalController {
             @RequestParam("surface") Double surface,
             @RequestParam("price") Double price,
             @RequestParam("description") String description,
-            @RequestHeader("Authorization") String token) throws Exception {
+            @RequestPart(value = "picture", required = false) MultipartFile picture) throws Exception {
         RentalDTO updatedRentalDTO = rentalService.updateRental(id, name, surface, price, description);
         return ResponseEntity.ok(updatedRentalDTO);
     }
-
+    
     @GetMapping("/images/{filename:.+}")
     @Operation(summary = "Serve rental image")
     @ApiResponses(value = {

@@ -4,6 +4,7 @@ import com.openclassrooms.dto.CreateMessageDTO;
 import com.openclassrooms.dto.MessageDTO;
 import com.openclassrooms.dto.MessageResponseDTO;
 import com.openclassrooms.services.DBUserService;
+import com.openclassrooms.services.JWTService;
 import com.openclassrooms.services.MessageService;
 import com.openclassrooms.services.RentalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +18,8 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/messages")
 public class MessageController {
@@ -25,7 +28,7 @@ public class MessageController {
     private DBUserService dbUserService;
 
     @Autowired
-    private JwtDecoder jwtDecoder;
+    private JWTService jwtService;
 
     @Autowired
     private RentalService rentalService;
@@ -41,9 +44,8 @@ public class MessageController {
             @ApiResponse(responseCode = "404", description = "User or rental not found")
     })
     public ResponseEntity<MessageResponseDTO> createMessage(@RequestHeader("Authorization") String token, @RequestBody CreateMessageDTO createMessageDTO) {
-        String jwtToken = token.replace("Bearer ", "");
-        Jwt jwt = jwtDecoder.decode(jwtToken);
-        String email = jwt.getClaim("sub");
+        Map<String, Object> claims = jwtService.decodeToken(token);
+        String email = (String) claims.get("sub");
 
         dbUserService.findByEmail(email);
         messageService.saveMessage(createMessageDTO);
