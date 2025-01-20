@@ -1,9 +1,17 @@
 package com.openclassrooms.dto;
 
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
 public class RegisterUserDTO {
-    private String email;
+    @NotBlank @Email
+    private String  email;
+    @NotBlank
     private String name;
+    @NotBlank
     private String password;
+
 
     // Getters and Setters
     public String getEmail() {

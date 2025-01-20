@@ -2,6 +2,7 @@ package com.openclassrooms.services;
 
 import com.openclassrooms.dto.AuthResponseDTO;
 import com.openclassrooms.dto.DBUserDTO;
+import com.openclassrooms.dto.RegisterUserDTO;
 import com.openclassrooms.dto.TokenResponseDTO;
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.repository.DBUserRepository;
@@ -81,15 +82,24 @@ public class DBUserService {
         return user;
     }
 
-    public TokenResponseDTO registerUser(DBUser user) {
+    public TokenResponseDTO registerUser(RegisterUserDTO registerUser) {
         try {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+            DBUser user = new DBUser();
+            user.setEmail(registerUser.getEmail());
+            user.setName(registerUser.getName());
+
+            // Ensure the password is set before encoding it
+            if (registerUser.getPassword() == null) {
+                throw new IllegalArgumentException("Password cannot be null");
+            }
+            user.setPassword(passwordEncoder.encode(registerUser.getPassword()));
+
             Timestamp currentTimestamp = new Timestamp(System.currentTimeMillis());
             user.setCreatedAt(currentTimestamp);
             user.setUpdatedAt(currentTimestamp);
 
             dbUserRepository.save(user);
-            String token = generateToken(user);
+            String token = this.generateToken(user);
             return new TokenResponseDTO(token);
         } catch (Exception e) {
             throw new RuntimeException("Error registering user: " + e.getMessage());
