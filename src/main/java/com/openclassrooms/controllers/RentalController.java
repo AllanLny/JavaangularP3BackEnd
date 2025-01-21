@@ -4,7 +4,7 @@ import com.openclassrooms.dto.MessageResponseDTO;
 import com.openclassrooms.dto.RentalDTO;
 import com.openclassrooms.dto.RentalResponse;
 import com.openclassrooms.model.DBUser;
-import com.openclassrooms.services.JWTService;
+import com.openclassrooms.configuration.JWTUtils;
 import com.openclassrooms.services.RentalService;
 import com.openclassrooms.services.DBUserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -40,7 +40,7 @@ public class RentalController {
     private DBUserService dbUserService;
 
     @Autowired
-    private JWTService jwtService;
+    private JWTUtils jwtUtils;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Create a new rental")
@@ -56,7 +56,7 @@ public class RentalController {
             @RequestParam("price") int price,
             @RequestParam("description") String description,
             @RequestParam("picture") MultipartFile picture) throws Exception {
-        Map<String, Object> claims = jwtService.decodeToken(token);
+        Map<String, Object> claims = jwtUtils.decodeToken(token);
         String email = (String) claims.get("sub");
 
         DBUser owner = dbUserService.findByEmail(email);

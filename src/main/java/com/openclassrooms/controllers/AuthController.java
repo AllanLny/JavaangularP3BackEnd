@@ -7,7 +7,7 @@ import com.openclassrooms.dto.RegisterUserDTO;
 import com.openclassrooms.dto.TokenResponseDTO;
 import com.openclassrooms.model.DBUser;
 import com.openclassrooms.services.DBUserService;
-import com.openclassrooms.services.JWTService;
+import com.openclassrooms.configuration.JWTUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -31,7 +31,7 @@ public class AuthController {
     private DBUserService dbUserService;
 
     @Autowired
-    private JWTService jwtService;
+    private JWTUtils jwtUtils;
 
     @PostMapping("/login")
     @Operation(summary = "Login a user")
@@ -70,7 +70,7 @@ public class AuthController {
                     content = @Content(schema = @Schema(implementation = DBUserDTO.class))),
     })
     public ResponseEntity<DBUserDTO> getCurrentUser(@RequestHeader("Authorization") String token) {
-        Map<String, Object> claims = jwtService.decodeToken(token);
+        Map<String, Object> claims = jwtUtils.decodeToken(token);
         String email = (String) claims.get("sub");
         DBUser user = dbUserService.findByEmail(email);
         DBUserDTO userDTO = dbUserService.convertToDTO(user);

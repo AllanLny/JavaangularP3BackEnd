@@ -1,4 +1,4 @@
-package com.openclassrooms.services;
+package com.openclassrooms.configuration;
 
 import com.openclassrooms.model.DBUser;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,14 +8,15 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.security.oauth2.jwt.JwsHeader;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
-public class JWTService {
+@Component
+public class JWTUtils {
 
     private final JwtEncoder jwtEncoder;
     private final JwtDecoder jwtDecoder;
@@ -23,7 +24,7 @@ public class JWTService {
     @Value("${jwt.secret}")
     private String jwtKey;
 
-    public JWTService(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder) {
+    public JWTUtils(JwtEncoder jwtEncoder, JwtDecoder jwtDecoder) {
         this.jwtEncoder = jwtEncoder;
         this.jwtDecoder = jwtDecoder;
     }

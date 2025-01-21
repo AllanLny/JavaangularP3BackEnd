@@ -4,7 +4,7 @@ import com.openclassrooms.dto.CreateMessageDTO;
 import com.openclassrooms.dto.MessageDTO;
 import com.openclassrooms.dto.MessageResponseDTO;
 import com.openclassrooms.services.DBUserService;
-import com.openclassrooms.services.JWTService;
+import com.openclassrooms.configuration.JWTUtils;
 import com.openclassrooms.services.MessageService;
 import com.openclassrooms.services.RentalService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +28,7 @@ public class MessageController {
     private DBUserService dbUserService;
 
     @Autowired
-    private JWTService jwtService;
+    private JWTUtils jwtUtils;
 
     @Autowired
     private RentalService rentalService;
@@ -44,7 +44,7 @@ public class MessageController {
             @ApiResponse(responseCode = "404", description = "User or rental not found")
     })
     public ResponseEntity<MessageResponseDTO> createMessage(@RequestHeader("Authorization") String token, @RequestBody CreateMessageDTO createMessageDTO) {
-        Map<String, Object> claims = jwtService.decodeToken(token);
+        Map<String, Object> claims = jwtUtils.decodeToken(token);
         String email = (String) claims.get("sub");
 
         dbUserService.findByEmail(email);
